@@ -1,4 +1,4 @@
 install (DIRECTORY benchmark_0
-         DESTINATION share/murray
-         COMPONENT murray)
+         DESTINATION share/sbm
+         COMPONENT sbm)
 
