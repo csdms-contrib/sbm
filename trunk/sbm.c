@@ -109,7 +109,8 @@ double gaussx[5] =
 				   wave frequency ~= 864/day                    */
 int NumFramesSaved = 0;		/* for keeping of track of when to save a new one */
 
-int maxRunTime = 30.;		/* measured in units of FORCING_DURATIONs; */
+//int maxRunTime = 30.;		/* measured in units of FORCING_DURATIONs; */
+double maxRunTime = 30.;		/* measured in units of FORCING_DURATIONs; */
 					  /* presently, 1 FORCING_DURATION = 1 day. */
 
 struct cellStruct
@@ -209,8 +210,147 @@ void UpdateRunTimeClock ();
 void UpdateForcingClock ();
 void WriteForcingConditions ();
 
+void
+initialize (void)
+{
+  /*  srand(500); */
+
+  /*printf("shall we start from a file (y or n)? \n");
+     scanf("%c", &startFromFile); */
+  /*  if (startFromFile == 'y')
+     {
+     printf("filename to read? \n");
+     scanf("%s", &readfilename);
+     printf("and what is the number of iterations?");
+     scanf("%d", &iterationCnt);     
+     InitCondsFromFile();               
+     } */
+  if (startFromFile == 'y')
+    InitCondsFromFile ();
+  if (startFromFile == 'n')
+    InitConds ();
+
+  SaveForcing = fopen ("save.forcing", "w");
+
+}
+
+void
+run (double until)
+{
+  int p, z;
+  int icount = 0;
+
+  if (until>0)
+    maxRunTime = until;
+fprintf (stderr, "%f\n", RunTimeClock ());
+fprintf (stderr, "%f\n", maxRunTime * FORCING_DURATION);
+  while ((RunTimeClock () < maxRunTime * FORCING_DURATION))
+  {
+/*   FORCING CONDITIONS ALONG A COASTLINE (CONSTRAINED CURRENT DIRECTION) */
+     /**/ if (currentDirectionX > 0)
+    {
+      if (GenRandomPercentage () < CURRENT_REVERSAL_PROB)
+      {
+	currentDirectionX = -currentDirectionX;
+	currentDirectionY = -currentDirectionY;
+      }				/*  // if */
+    }				/*  // if */
+    else
+    {
+      if (GenRandomPercentage () < CURRENT_REVERSAL_PROB * POS_NEG_RATIO)
+      {
+	currentDirectionX = -currentDirectionX;
+	currentDirectionY = -currentDirectionY;
+      }				/*  // if */
+    }				/*  // else */
+
+
+/*    FORCING CONDITIONS AWAY FROM A COASTLINE (NO CONSTRAINED CURRENT DIRECTION */
+/*
+      if (GenRandomPercentage() > 0.5) currentDirectionX =  1.0;
+      else                             currentDirectionX = -1.0;
+      if (GenRandomPercentage() > 0.5) currentDirectionY =  1.0;
+      else                             currentDirectionY = -1.0;
+*/
+
+
+
+/*    waveHeight = GenRandomGaussian(WAVEHEIGHT_MEAN, WAVEHEIGHT_SIGMA);
+      currentVelocityX = -currentDirectionX * GenRandomGaussian(VELOCITY_MEAN, VELOCITY_SIGMA);
+      currentVelocityY = -currentDirectionY * GenRandomGaussian(VELOCITY_MEAN, VELOCITY_SIGMA); */
+    waveHeight = WAVEHEIGHT_MEAN;
+    currentVelocityX = currentDirectionX * VELOCITY_MEAN;
+    currentVelocityY = currentDirectionY * VELOCITY_MEAN;
+
+    icount = icount + 1;
+    if ((icount > 19) && (icount < 22))
+    {
+      waveHeight = 5.0;
+      timeStep = 10.0;
+    }
+    else
+    {
+      timeStep = 100.0;
+    }
+
+    printf (" waveHeight= %f \n", waveHeight);
+    printf (" currentVelocityX= %f \n", currentVelocityX);
+    printf (" currentVelocityY= %f \n", currentVelocityY);
+
+
+    for (p = 1; p <= AdjustTime; p++)
+    {
+      DoIterationDummy ();	/*Gives sed trans across boundaries time */
+      /*to adjust to new direction */
+    }				/* // for */
+
+fprintf (stderr, "%f\n", ForcingClock ());
+fprintf (stderr, "%f\n", FORCING_DURATION);
+    while (ForcingClock () < FORCING_DURATION)
+    {
+      DoIteration ();
+      z = area[50][50].activeZ;
+
+
+      if (RunTimeClock () / FORCING_DURATION >
+	  StartSavingAt + NumFramesSaved * FrameSpacing)
+      {
+	NumFramesSaved++;
+	PrintToFile ();
+	printf ("\nFrame %i saved\n", NumFramesSaved);
+      }				/* // if */
+
+      /* //   printf("."); */
+      /*      printf("Time = %f hrs\n", RunTimeClock() / 3600.); */
+      /* //   printf("%f %i \n", RunTimeClock()/FORCING_DURATION, NumFramesSaved); */
+      FindAveBedHt ();
+    }				/* // while */
+
+    UpdateForcingClock ();
+
+  }				/* // while */
+
+}
+
+void
+finalize (void)
+{
+  printf ("Total elapsed time = %f hrs\n", RunTimeClock () / 3600.);
+  fclose (SaveForcing);
+}
+
+int
+new_main ()
+{
+  initialize ();
+  run (maxRunTime);
+  finalize ();
+
+  return 0;
+}
+
 /* main looks at how many long you want to run, and then runs it */
-main ()
+old_main ()
 {
   int p, z;
   int icount = 0;

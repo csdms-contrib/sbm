@@ -7,9 +7,9 @@ set (sbm_LIB_SRCS sbm.c)
 add_library (sbm ${sbm_LIB_SRCS})
 install (TARGETS sbm DESTINATION lib COMPONENT sbm)
 
-set (sbm_SRCS sbm.c)
-add_executable (sbm_exe ${sbm_SRCS})
-target_link_libraries (sbm_exe m)
+set (sbm_exe_SRCS sbm_exe.c)
+add_executable (sbm_exe ${sbm_exe_SRCS})
+target_link_libraries (sbm_exe m sbm)
 install (PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/sbm_exe
          DESTINATION bin COMPONENT sbm RENAME sbm)
 
