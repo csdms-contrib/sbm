@@ -242,8 +242,7 @@ run (double until)
 
   if (until>0)
     maxRunTime = until;
-fprintf (stderr, "%f\n", RunTimeClock ());
-fprintf (stderr, "%f\n", maxRunTime * FORCING_DURATION);
+
   while ((RunTimeClock () < maxRunTime * FORCING_DURATION))
   {
 /*   FORCING CONDITIONS ALONG A COASTLINE (CONSTRAINED CURRENT DIRECTION) */
@@ -304,9 +303,8 @@ fprintf (stderr, "%f\n", maxRunTime * FORCING_DURATION);
       /*to adjust to new direction */
     }				/* // for */
 
-fprintf (stderr, "%f\n", ForcingClock ());
-fprintf (stderr, "%f\n", FORCING_DURATION);
-    while (ForcingClock () < FORCING_DURATION)
+    while (ForcingClock () < FORCING_DURATION &&
+           RunTimeClock () < maxRunTime * FORCING_DURATION)
     {
       DoIteration ();
       z = area[50][50].activeZ;
@@ -377,7 +375,6 @@ old_main ()
 /*    printf("Max run time = %f hrs", maxRunTime*FORCING_DURATION/3600.); */
   while ((RunTimeClock () < maxRunTime * FORCING_DURATION))
   {
-fprintf (stderr ,"The time is %f\n", RunTimeClock ());
 /*   FORCING CONDITIONS ALONG A COASTLINE (CONSTRAINED CURRENT DIRECTION) */
      /**/ if (currentDirectionX > 0)
     {
